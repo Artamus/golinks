@@ -14,7 +14,10 @@ pub fn main() {
     fn(req: Request(Connection)) -> Response(ResponseData) {
       case request.path_segments(req) {
         ["echo"] -> echo_body(req)
-        ["hello", name] -> hello(name)
+        ["shortlink", "save"] -> save(req)
+        ["shortlink", "delete"] -> delete(req)
+        ["shortlink", "list"] -> list(req)
+        ["resolve", short_link, ..tail] -> resolve(short_link, tail)
         _ -> not_found
       }
     }
@@ -23,6 +26,22 @@ pub fn main() {
     |> mist.start_http
 
   process.sleep_forever()
+}
+
+fn resolve(short_link: String, tail: List(String)) -> Response(ResponseData) {
+  todo
+}
+
+fn save(request: Request(Connection)) -> Response(ResponseData) {
+  todo
+}
+
+fn delete(request: Request(Connection)) -> Response(ResponseData) {
+  todo
+}
+
+fn list(request: Request(Connection)) -> Response(ResponseData) {
+  todo
 }
 
 fn echo_body(request: Request(Connection)) -> Response(ResponseData) {
@@ -41,9 +60,4 @@ fn echo_body(request: Request(Connection)) -> Response(ResponseData) {
     response.new(400)
     |> response.set_body(mist.Bytes(bytes_builder.new()))
   })
-}
-
-fn hello(name: String) -> Response(ResponseData) {
-  response.new(200)
-  |> response.set_body(mist.Bytes(bytes_builder.from_string("Hello" <> name)))
 }
