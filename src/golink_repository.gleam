@@ -1,5 +1,4 @@
 import carpenter/table.{type Set}
-import gleam/io
 import gleam/list
 import gleam/result
 import golink.{type GoLink}
@@ -20,11 +19,8 @@ pub fn create() -> Result(GoLinkRepository, Nil) {
 }
 
 pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
-  let bla =
-    repository.table
-    |> table.lookup(short)
-  io.debug(bla)
-  bla
+  repository.table
+  |> table.lookup(short)
   |> list.first
   |> result.map(fn(search_result) {
     let #(_, link) = search_result
