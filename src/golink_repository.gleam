@@ -7,6 +7,10 @@ pub type GoLinkRepository {
   Repository(table: Set(String, GoLink))
 }
 
+pub type Error {
+  AlreadyExists
+}
+
 pub fn create() -> Result(GoLinkRepository, Nil) {
   table.build("golinks")
   |> table.privacy(table.Public)
@@ -28,10 +32,13 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
   })
 }
 
-pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(Nil, String) {
+pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
   case table.contains(repository.table, link.short) {
-    True -> Error("this shortlink already exists")
-    False -> repository.table |> table.insert([#(link.short, link)]) |> Ok
+    True -> Error(AlreadyExists)
+    False -> {
+      repository.table |> table.insert([#(link.short, link)])
+      Ok(link)
+    }
   }
 }
 
