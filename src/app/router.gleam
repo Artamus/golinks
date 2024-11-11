@@ -1,12 +1,13 @@
+import app/pages/golink as golink_page
+import app/pages/home
 import app/web.{type Context}
 import gleam/http.{Delete, Get}
-import gleam/io
 import gleam/list
 import gleam/result
 import gleam/string
-import gleam/string_builder
-import golink
+import golink.{GoLink}
 import golink_repository.{type GoLinkRepository}
+import lustre/element
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
@@ -14,12 +15,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
   case wisp.path_segments(req) {
     [] ->
-      wisp.html_response(
-        string_builder.from_string(
-          "<h1>Page listing your owned shortlinks and HTML to create a new one and ability to delete the existing ones.</h1><form method=\"POST\" action=\"/shortlinks-admin/golink\"><input type=\"text\" id=\"short\" name=\"short\"><input type=\"text\" id=\"long\" name=\"long\"><button type=\"submit\">Create</button></form>",
-        ),
-        200,
-      )
+      home.root()
+      |> element.to_document_string_builder
+      |> wisp.html_response(200)
     ["shortlinks-admin", "golink"] -> save(req, ctx.repository)
     ["shortlinks-admin", "golink", short_link] ->
       golink_endpoints(req, short_link, ctx.repository)
@@ -42,7 +40,6 @@ fn golink_endpoints(
 fn save(req: Request, repository: GoLinkRepository) -> Response {
   use formdata <- wisp.require_form(req)
 
-  io.debug(formdata.values)
   let go_link = {
     use short_link <- result.try(
       list.key_find(formdata.values, "short")
@@ -53,7 +50,7 @@ fn save(req: Request, repository: GoLinkRepository) -> Response {
       |> result.map_error(fn(_) { "Required key \"long\" is missing." }),
     )
 
-    let go_link = golink.GoLink(short_link, long_link)
+    let go_link = GoLink(short_link, long_link)
     Ok(go_link)
   }
 
@@ -76,20 +73,12 @@ fn save(req: Request, repository: GoLinkRepository) -> Response {
 
 fn get(short_link: String, repository: GoLinkRepository) -> Response {
   let resolved = golink_repository.get(repository, short_link)
+
   case resolved {
     Ok(go_link) ->
-      wisp.html_response(
-        string_builder.from_string(
-          "<h1>go/</h1><br>"
-          <> go_link.short
-          <> " -> "
-          <> go_link.long
-          <> "<br><form method=\"POST\" action=\"/shortlinks-admin/golink/"
-          <> go_link.short
-          <> "?_method=DELETE\"><button name=\"delete\" value=\"delete\">Delete</button></form>",
-        ),
-        200,
-      )
+      golink_page.root(go_link)
+      |> element.to_document_string_builder
+      |> wisp.html_response(200)
     Error(Nil) -> wisp.not_found()
   }
 }
