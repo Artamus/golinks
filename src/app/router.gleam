@@ -1,5 +1,6 @@
 import app/pages/golink as golink_page
 import app/pages/home
+import app/pages/layout
 import app/web.{type Context}
 import gleam/http.{Delete, Get}
 import gleam/list
@@ -17,7 +18,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
     [] -> {
       let links = golink_repository.list(ctx.repository)
 
-      home.root(links)
+      [home.root(links)]
+      |> layout.layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
@@ -79,7 +81,8 @@ fn get(short_link: String, repository: GoLinkRepository) -> Response {
 
   case resolved {
     Ok(go_link) ->
-      golink_page.root(go_link)
+      [golink_page.root(go_link)]
+      |> layout.layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     Error(Nil) -> wisp.not_found()
