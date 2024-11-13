@@ -5,7 +5,7 @@ import gleam/http.{Delete, Get}
 import gleam/list
 import gleam/result
 import gleam/string
-import golink.{GoLink}
+import golink
 import golink_repository.{type GoLinkRepository}
 import lustre/element
 import wisp.{type Request, type Response}
@@ -14,10 +14,13 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- web.middleware(req)
 
   case wisp.path_segments(req) {
-    [] ->
-      home.root()
+    [] -> {
+      let links = golink_repository.list(ctx.repository)
+
+      home.root(links)
       |> element.to_document_string_builder
       |> wisp.html_response(200)
+    }
     ["shortlinks-admin", "golink"] -> save(req, ctx.repository)
     ["shortlinks-admin", "golink", short_link] ->
       golink_endpoints(req, short_link, ctx.repository)
@@ -43,15 +46,14 @@ fn save(req: Request, repository: GoLinkRepository) -> Response {
   let go_link = {
     use short_link <- result.try(
       list.key_find(formdata.values, "short")
-      |> result.map_error(fn(_) { "Required key \"short\" is missing." }),
+      |> result.replace_error("Required key \"short\" is missing."),
     )
     use long_link <- result.try(
       list.key_find(formdata.values, "long")
-      |> result.map_error(fn(_) { "Required key \"long\" is missing." }),
+      |> result.replace_error("Required key \"long\" is missing."),
     )
 
-    let go_link = GoLink(short_link, long_link)
-    Ok(go_link)
+    golink.create(short_link, long_link)
   }
 
   let save_result =
@@ -60,6 +62,7 @@ fn save(req: Request, repository: GoLinkRepository) -> Response {
       |> result.map_error(fn(err) {
         case err {
           golink_repository.AlreadyExists -> "This shortlink is already taken."
+          golink_repository.Unknown -> "Unknown error."
         }
       })
     })
@@ -84,7 +87,7 @@ fn get(short_link: String, repository: GoLinkRepository) -> Response {
 }
 
 fn delete(short_link: String, repository: GoLinkRepository) -> Response {
-  golink_repository.delete(repository, short_link)
+  let _ = golink_repository.delete(repository, short_link)
   wisp.redirect(to: "/")
 }
 
@@ -98,7 +101,9 @@ fn resolve(
     |> result.map(fn(link) { [link.long, ..tail] |> string.join("/") })
 
   case resolved {
-    Ok(long_link) -> wisp.redirect(long_link)
+    Ok(long_link) -> {
+      wisp.redirect(long_link)
+    }
     Error(Nil) -> wisp.not_found()
   }
 }

@@ -1,17 +1,28 @@
 import app/router
 import app/web.{Context}
 import gleam/erlang/process
+import gleam/option.{Some}
 import golink_repository
 import mist
+import pog
 import wisp
 import wisp/wisp_mist
 
 pub fn main() {
   wisp.configure_logger()
 
-  let assert Ok(golink_repository) = golink_repository.create()
+  // TODO: Read from some config.
+  let db_conn =
+    pog.default_config()
+    |> pog.host("localhost")
+    |> pog.database("db")
+    |> pog.user("postgres")
+    |> pog.password(Some("test"))
+    |> pog.pool_size(15)
+    |> pog.connect
+  let repository = golink_repository.create(db_conn)
 
-  let ctx = Context(golink_repository)
+  let ctx = Context(repository)
   let secret_key_base = wisp.random_string(64)
 
   let handler = router.handle_request(_, ctx)

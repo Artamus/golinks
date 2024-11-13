@@ -1,47 +1,82 @@
-import carpenter/table.{type Set}
-import gleam/list
+import gleam/dynamic
 import gleam/result
-import golink.{type GoLink}
+import golink.{type GoLink, GoLink}
+import pog
 
 pub type GoLinkRepository {
-  Repository(table: Set(String, GoLink))
+  DbRepository(conn: pog.Connection)
 }
 
 pub type Error {
+  Unknown
   AlreadyExists
 }
 
-pub fn create() -> Result(GoLinkRepository, Nil) {
-  table.build("golinks")
-  |> table.privacy(table.Public)
-  |> table.write_concurrency(table.AutoWriteConcurrency)
-  |> table.read_concurrency(True)
-  |> table.decentralized_counters(True)
-  |> table.compression(False)
-  |> table.set
-  |> result.map(fn(table) { Repository(table) })
+pub fn create(conn: pog.Connection) -> GoLinkRepository {
+  DbRepository(conn)
 }
 
 pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
-  repository.table
-  |> table.lookup(short)
-  |> list.first
-  |> result.map(fn(search_result) {
-    let #(_, link) = search_result
-    link
+  let decoder =
+    dynamic.decode2(
+      GoLink,
+      dynamic.element(0, dynamic.string),
+      dynamic.element(1, dynamic.string),
+    )
+  let response =
+    pog.query("select short, long from golinks where short=$1")
+    |> pog.parameter(pog.text(short))
+    |> pog.returning(decoder)
+    |> pog.execute(repository.conn)
+    |> result.replace_error(Nil)
+
+  response
+  |> result.try(fn(results) {
+    case results.rows {
+      [golink] -> Ok(golink)
+      _ -> Error(Nil)
+    }
   })
 }
 
 pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
-  case table.contains(repository.table, link.short) {
-    True -> Error(AlreadyExists)
-    False -> {
-      repository.table |> table.insert([#(link.short, link)])
-      Ok(link)
-    }
+  let result =
+    pog.query("insert into golinks (short, long) values ($1,$2);")
+    |> pog.parameter(pog.text(link.short))
+    |> pog.parameter(pog.text(link.long))
+    |> pog.execute(repository.conn)
+
+  case result {
+    Ok(_) -> Ok(link)
+    Error(error) ->
+      case error {
+        pog.ConstraintViolated(_, _, _) -> Error(AlreadyExists)
+        _ -> Error(Unknown)
+      }
   }
 }
 
-pub fn delete(repository: GoLinkRepository, short_link: String) {
-  repository.table |> table.delete(short_link)
+pub fn delete(repository: GoLinkRepository, short: String) {
+  let _result =
+    pog.query("delete from golinks where short=$1")
+    |> pog.parameter(pog.text(short))
+    |> pog.execute(repository.conn)
+}
+
+pub fn list(repository: GoLinkRepository) -> List(GoLink) {
+  let decoder =
+    dynamic.decode2(
+      GoLink,
+      dynamic.element(0, dynamic.string),
+      dynamic.element(1, dynamic.string),
+    )
+
+  let asd =
+    pog.query("select short, long from golinks")
+    |> pog.returning(decoder)
+    |> pog.execute(repository.conn)
+  case asd {
+    Ok(foo) -> foo.rows
+    Error(_) -> []
+  }
 }
