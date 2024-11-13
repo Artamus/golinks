@@ -12,8 +12,13 @@ pub type Error {
   AlreadyExists
 }
 
-pub fn create(conn: pog.Connection) -> GoLinkRepository {
-  DbRepository(conn)
+pub fn create(conn: pog.Connection) -> Result(GoLinkRepository, String) {
+  let foo = pog.query("select 1=1") |> pog.execute(conn)
+
+  case foo {
+    Ok(_) -> Ok(DbRepository(conn))
+    Error(_) -> Error("Could not connect to database.")
+  }
 }
 
 pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {

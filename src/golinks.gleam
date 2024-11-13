@@ -20,7 +20,7 @@ pub fn main() {
     |> pog.password(Some("test"))
     |> pog.pool_size(15)
     |> pog.connect
-  let repository = golink_repository.create(db_conn)
+  let assert Ok(repository) = golink_repository.create(db_conn)
 
   let ctx = Context(repository)
   let secret_key_base = wisp.random_string(64)
