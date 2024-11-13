@@ -1,20 +1,11 @@
 # golinks
 
-[![Package Version](https://img.shields.io/hexpm/v/golinks)](https://hex.pm/packages/golinks)
-[![Hex Docs](https://img.shields.io/badge/hex-docs-ffaff3)](https://hexdocs.pm/golinks/)
+A quick and dirty shortlinks service to be usable inside a company's private network.
 
-```sh
-gleam add golinks@1
-```
-```gleam
-import golinks
-
-pub fn main() {
-  // TODO: An example of the project in use
-}
-```
-
-Further documentation can be found at <https://hexdocs.pm/golinks>.
+Inspired by:
+- https://github.com/nownabe/golink
+- https://github.com/trotto/go-links
+- https://github.com/tailscale/golink
 
 ## Development
 
