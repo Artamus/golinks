@@ -38,7 +38,7 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
   response
   |> result.try(fn(results) {
     case results.rows {
-      [golink] -> Ok(golink)
+      [link] -> Ok(link)
       _ -> Error(Nil)
     }
   })

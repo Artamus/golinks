@@ -60,26 +60,26 @@ pub fn root(links: List(GoLink)) -> List(Element(t)) {
       ],
     ),
     h2([class("text-xl font-bold pt-6 pb-2")], [text("Your shortlinks")]),
-    golinks(links),
+    go_links(links),
   ]
 }
 
-fn golinks(golinks: List(GoLink)) -> Element(t) {
+fn go_links(links: List(GoLink)) -> Element(t) {
   table([class("table-auto w-full max-w-max")], [
-    tbody([], golinks |> list.map(golink)),
+    tbody([], links |> list.map(go_link)),
   ])
 }
 
-fn golink(golink: GoLink) -> Element(t) {
+fn go_link(link: GoLink) -> Element(t) {
   tr([class("hover:bg-gray-100 group border-b border-gray-200")], [
     td([class("flex")], [
       span([class("flex m-2 items-center")], [text("•")]),
       a(
         [
           class("block flex-1 p-2 pr-4 hover:text-blue-500 hover:underline"),
-          href("/shortlinks-admin/golink/" <> golink.short),
+          href("/shortlinks-admin/golink/" <> link.short),
         ],
-        [text("go/" <> golink.short)],
+        [text("go/" <> link.short)],
       ),
     ]),
   ])

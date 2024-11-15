@@ -3,27 +3,25 @@ import lustre/attribute.{action, class, href, method, type_}
 import lustre/element.{type Element, text}
 import lustre/element/html.{a, button, div, form}
 
-pub fn root(go_link: GoLink) -> Element(t) {
+pub fn root(link: GoLink) -> Element(t) {
   div([class("flex flex-col")], [
     div([class("font-semibold")], [
       a(
         [
           class("hover:text-blue-500 hover:underline"),
-          href("http://go/" <> go_link.short),
+          href("http://go/" <> link.short),
         ],
-        [text("http://go/" <> go_link.short)],
+        [text("http://go/" <> link.short)],
       ),
       text(" → "),
-      a([class("hover:text-blue-500 hover:underline"), href(go_link.long)], [
-        text(go_link.long),
+      a([class("hover:text-blue-500 hover:underline"), href(link.long)], [
+        text(link.long),
       ]),
     ]),
     form(
       [
         method("POST"),
-        action(
-          "/shortlinks-admin/golink/" <> go_link.short <> "?_method=DELETE",
-        ),
+        action("/shortlinks-admin/golink/" <> link.short <> "?_method=DELETE"),
       ],
       [
         button(
