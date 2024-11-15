@@ -1,7 +1,7 @@
 import gleam/dynamic
 import gleam/result
 import golink.{type GoLink, GoLink}
-import pog
+import pog.{ConnectionUnavailable}
 
 pub type GoLinkRepository {
   DbRepository(conn: pog.Connection)
@@ -12,12 +12,16 @@ pub type Error {
   AlreadyExists
 }
 
-pub fn create(conn: pog.Connection) -> Result(GoLinkRepository, String) {
-  let foo = pog.query("select 1=1") |> pog.execute(conn)
+pub fn create(
+  conn: pog.Connection,
+  schema: String,
+) -> Result(GoLinkRepository, String) {
+  let schema_result = pog.query(schema) |> pog.execute(conn)
 
-  case foo {
+  case schema_result {
     Ok(_) -> Ok(DbRepository(conn))
-    Error(_) -> Error("Could not connect to database.")
+    Error(ConnectionUnavailable) -> Error("Could not connect to database.")
+    Error(_) -> Error("Could not create database schema.")
   }
 }
 

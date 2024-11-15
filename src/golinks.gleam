@@ -5,6 +5,7 @@ import gleam/option.{Some}
 import golink_repository
 import mist
 import pog
+import simplifile
 import wisp
 import wisp/wisp_mist
 
@@ -20,7 +21,8 @@ pub fn main() {
     |> pog.password(Some("test"))
     |> pog.pool_size(15)
     |> pog.connect
-  let assert Ok(repository) = golink_repository.create(db_conn)
+  let assert Ok(schema) = simplifile.read(from: "./src/db/schema.sql")
+  let assert Ok(repository) = golink_repository.create(db_conn, schema)
 
   let assert Ok(static_directory) = wisp.priv_directory("golinks")
 
