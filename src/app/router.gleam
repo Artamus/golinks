@@ -12,13 +12,13 @@ import lustre/element
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
-  use req <- web.middleware(req)
+  use req <- web.middleware(req, ctx)
 
   case wisp.path_segments(req) {
     [] -> {
       let links = golink_repository.list(ctx.repository)
 
-      [home.root(links)]
+      home.root(links)
       |> layout.layout
       |> element.to_document_string_builder
       |> wisp.html_response(200)

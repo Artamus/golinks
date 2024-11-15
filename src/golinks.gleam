@@ -22,7 +22,9 @@ pub fn main() {
     |> pog.connect
   let assert Ok(repository) = golink_repository.create(db_conn)
 
-  let ctx = Context(repository)
+  let assert Ok(static_directory) = wisp.priv_directory("golinks")
+
+  let ctx = Context(static_directory, repository)
   let secret_key_base = wisp.random_string(64)
 
   let handler = router.handle_request(_, ctx)
