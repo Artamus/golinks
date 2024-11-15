@@ -29,7 +29,7 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
       dynamic.element(1, dynamic.string),
     )
   let response =
-    pog.query("select short, long from golinks where short=$1")
+    pog.query("select short, long from go_links where short=$1")
     |> pog.parameter(pog.text(short))
     |> pog.returning(decoder)
     |> pog.execute(repository.conn)
@@ -46,7 +46,7 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
 
 pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
   let result =
-    pog.query("insert into golinks (short, long) values ($1,$2);")
+    pog.query("insert into go_links (short, long) values ($1,$2);")
     |> pog.parameter(pog.text(link.short))
     |> pog.parameter(pog.text(link.long))
     |> pog.execute(repository.conn)
@@ -63,7 +63,7 @@ pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error)
 
 pub fn delete(repository: GoLinkRepository, short: String) {
   let _result =
-    pog.query("delete from golinks where short=$1")
+    pog.query("delete from go_links where short=$1")
     |> pog.parameter(pog.text(short))
     |> pog.execute(repository.conn)
 }
@@ -76,12 +76,12 @@ pub fn list(repository: GoLinkRepository) -> List(GoLink) {
       dynamic.element(1, dynamic.string),
     )
 
-  let asd =
-    pog.query("select short, long from golinks")
+  let links_rows =
+    pog.query("select short, long from go_links")
     |> pog.returning(decoder)
     |> pog.execute(repository.conn)
-  case asd {
-    Ok(foo) -> foo.rows
+  case links_rows {
+    Ok(ret) -> ret.rows
     Error(_) -> []
   }
 }
