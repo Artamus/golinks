@@ -13,9 +13,9 @@ pub fn root(links: List(GoLink)) -> List(Element(t)) {
     h2([class("text-xl font-bold pt-6 pb-2")], [text("Create a new golink")]),
     form(
       [
+        class("flex flex-wrap"),
         method("POST"),
         action("/shortlinks-admin/golink"),
-        class("flex flex-wrap"),
       ],
       [
         div([class("flex")], [
@@ -51,7 +51,7 @@ pub fn root(links: List(GoLink)) -> List(Element(t)) {
         button(
           [
             class(
-              "py-2 px-4 my-2 rounded-md bg-blue-500 border-blue-500 text-white hover:bg-blue-600 hover:border-blue-600",
+              "py-2 px-4 my-2 rounded-md bg-indigo-500 border-indigo-500 text-white hover:bg-indigo-600 hover:border-indigo-600",
             ),
             type_("submit"),
           ],

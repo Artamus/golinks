@@ -9,7 +9,6 @@ pub type GoLinkRepository {
 
 pub type Error {
   Unknown
-  AlreadyExists
 }
 
 pub fn create(
@@ -50,7 +49,9 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
 
 pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
   let result =
-    pog.query("insert into go_links (short, long) values ($1,$2);")
+    pog.query(
+      "insert into go_links (short, long) values ($1,$2) on conflict (short) do update set long=$2;",
+    )
     |> pog.parameter(pog.text(link.short))
     |> pog.parameter(pog.text(link.long))
     |> pog.execute(repository.conn)
@@ -59,7 +60,6 @@ pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error)
     Ok(_) -> Ok(link)
     Error(error) ->
       case error {
-        pog.ConstraintViolated(_, _, _) -> Error(AlreadyExists)
         _ -> Error(Unknown)
       }
   }

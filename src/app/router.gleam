@@ -2,7 +2,7 @@ import app/pages/golink as golink_page
 import app/pages/home
 import app/pages/layout
 import app/web.{type Context}
-import gleam/http.{Delete, Get}
+import gleam/http.{Delete, Get, Patch}
 import gleam/list
 import gleam/result
 import gleam/string
@@ -23,7 +23,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
-    ["shortlinks-admin", "golink"] -> save(req, ctx.repository)
+    ["shortlinks-admin", "golink"] -> create(req, ctx.repository)
     ["shortlinks-admin", "golink", short_link] ->
       golink_endpoints(req, short_link, ctx.repository)
     [short_link, ..tail] -> resolve(short_link, tail, ctx.repository)
@@ -38,11 +38,12 @@ fn golink_endpoints(
   case req.method {
     Get -> get(short_link, golink_repository)
     Delete -> delete(short_link, golink_repository)
-    _ -> wisp.method_not_allowed([Get, Delete])
+    Patch -> update(req, short_link, golink_repository)
+    _ -> wisp.method_not_allowed([Get, Delete, Patch])
   }
 }
 
-fn save(req: Request, repository: GoLinkRepository) -> Response {
+fn create(req: Request, repository: GoLinkRepository) -> Response {
   use formdata <- wisp.require_form(req)
 
   let go_link = {
@@ -63,7 +64,6 @@ fn save(req: Request, repository: GoLinkRepository) -> Response {
       golink_repository.save(repository, link)
       |> result.map_error(fn(err) {
         case err {
-          golink_repository.AlreadyExists -> "This shortlink is already taken."
           golink_repository.Unknown -> "Unknown error."
         }
       })
@@ -86,6 +86,39 @@ fn get(short_link: String, repository: GoLinkRepository) -> Response {
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     Error(Nil) -> wisp.not_found()
+  }
+}
+
+fn update(
+  req: Request,
+  short_link: String,
+  repository: GoLinkRepository,
+) -> Response {
+  use formdata <- wisp.require_form(req)
+
+  let go_link = {
+    use long_link <- result.try(
+      list.key_find(formdata.values, "long")
+      |> result.replace_error("Required key \"long\" is missing."),
+    )
+
+    golink.create(short_link, long_link)
+  }
+
+  let save_result =
+    result.try(go_link, fn(link) {
+      golink_repository.save(repository, link)
+      |> result.map_error(fn(err) {
+        case err {
+          golink_repository.Unknown -> "Unknown error."
+        }
+      })
+    })
+
+  case save_result {
+    Ok(go_link) ->
+      wisp.redirect(to: "/shortlinks-admin/golink/" <> go_link.short)
+    Error(err) -> wisp.bad_request() |> wisp.string_body(err)
   }
 }
 
