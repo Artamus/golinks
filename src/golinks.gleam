@@ -1,11 +1,11 @@
-import app/router
-import app/web.{Context}
 import gleam/erlang/process
 import gleam/option.{Some}
 import golink_repository
 import mist
 import pog
 import simplifile
+import webapp/router
+import webapp/web.{Context}
 import wisp
 import wisp/wisp_mist
 

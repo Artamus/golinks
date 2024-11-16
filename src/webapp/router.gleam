@@ -1,7 +1,3 @@
-import app/pages/golink as golink_page
-import app/pages/home
-import app/pages/layout
-import app/web.{type Context}
 import gleam/http.{Delete, Get, Patch}
 import gleam/list
 import gleam/result
@@ -9,6 +5,10 @@ import gleam/string
 import golink
 import golink_repository.{type GoLinkRepository}
 import lustre/element
+import webapp/pages/golink as golink_page
+import webapp/pages/home
+import webapp/pages/layout
+import webapp/web.{type Context}
 import wisp.{type Request, type Response}
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
