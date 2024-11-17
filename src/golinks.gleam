@@ -31,7 +31,7 @@ pub fn main() {
   let assert Ok(schema) = simplifile.read(from: priv_dir <> "/db/schema.sql")
   let assert Ok(repository) = golink_repository.create(db_conn, schema)
 
-  let ctx = Context(priv_dir, repository)
+  let ctx = Context(priv_dir <> "/static", repository)
   let secret_key_base = wisp.random_string(64)
 
   let handler = router.handle_request(_, ctx)

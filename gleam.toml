@@ -21,7 +21,7 @@ glailglind = ">= 1.1.3 and < 2.0.0"
 version = "3.4.1"
 args = [
     "--config=tailwind.config.js",
-    "--input=./src/app/css/app.css",
-    "--output=./priv/css/app.css"
+    "--input=./src/webapp/css/app.css",
+    "--output=./priv/static/css/app.css"
 ]
 path = "./build/bin/tailwindcss-cli"
