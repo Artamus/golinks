@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS go_links (
     long TEXT NOT NULL
 );
 
-CREATE UNIQUE INDEX idx_golinks_short
+CREATE UNIQUE INDEX IF NOT EXISTS idx_golinks_short
 ON go_links(short);
