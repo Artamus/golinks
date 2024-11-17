@@ -1,6 +1,6 @@
-import lustre/attribute.{class, href, target}
+import lustre/attribute.{class, href, src, target, width}
 import lustre/element.{type Element}
-import lustre/element/html.{a, div, footer, h1, header, main, text}
+import lustre/element/html.{a, div, footer, h1, header, img, main, text}
 
 pub fn layout(elements: List(Element(t))) -> Element(t) {
   html.html([], [
@@ -25,9 +25,18 @@ pub fn layout(elements: List(Element(t))) -> Element(t) {
       main([class("container mx-auto px-4 flex-1")], elements),
       footer([class("bg-fuchsia-200 border-t border-gray-200 pt-2 pb-2 mt-6")], [
         div([class("container mx-auto px-4 leading-6 text-right")], [
-          text("Made with ❤️ in "),
-          // TODO: Introduce Gleam icon in front of Gleam.
-          a([href("https://gleam.run/"), target("_blank")], [text("Gleam.")]),
+          text("Made with ❤️ using "),
+          a(
+            [
+              class("font-semibold"),
+              href("https://gleam.run/"),
+              target("_blank"),
+            ],
+            [
+              img([class("inline w-6 mr-1"), width(24), src("/static/lucy.svg")]),
+              text("Gleam."),
+            ],
+          ),
         ]),
       ]),
     ]),
