@@ -1,5 +1,7 @@
 import gleam/dynamic
+import gleam/list
 import gleam/result
+import gleam/string
 import golink.{type GoLink, GoLink}
 import pog.{ConnectionUnavailable}
 
@@ -15,7 +17,12 @@ pub fn create(
   conn: pog.Connection,
   schema: String,
 ) -> Result(GoLinkRepository, String) {
-  let schema_result = pog.query(schema) |> pog.execute(conn)
+  let schema_statements = string.split(schema, "\n\n")
+
+  let schema_result =
+    schema_statements
+    |> list.map(fn(statement) { pog.query(statement) |> pog.execute(conn) })
+    |> result.all()
 
   case schema_result {
     Ok(_) -> Ok(DbRepository(conn))
@@ -50,7 +57,7 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
 pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
   let result =
     pog.query(
-      "insert into go_links (short, long) values ($1,$2) on conflict (short) do update set long=$2;",
+      "insert into go_links (short, long) values ($1,$2) on conflict (short) do update set long=$2, updated_at=CURRENT_TIMESTAMP;",
     )
     |> pog.parameter(pog.text(link.short))
     |> pog.parameter(pog.text(link.long))
