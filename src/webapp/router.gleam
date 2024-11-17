@@ -16,6 +16,9 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 
   case wisp.path_segments(req) {
     [] -> {
+      wisp.redirect("/shortlinks-admin")
+    }
+    ["shortlinks-admin"] -> {
       let links = golink_repository.list(ctx.repository)
 
       home.root(links)
@@ -124,7 +127,7 @@ fn update(
 
 fn delete(short_link: String, repository: GoLinkRepository) -> Response {
   let _ = golink_repository.delete(repository, short_link)
-  wisp.redirect(to: "/")
+  wisp.redirect(to: "/shortlinks-admin")
 }
 
 fn resolve(

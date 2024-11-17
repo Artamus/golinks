@@ -18,7 +18,9 @@ pub fn layout(elements: List(Element(t))) -> Element(t) {
     html.body([class("flex flex-col min-h-screen")], [
       div([class("bg-fuchsia-300 border-b border-gray-200 pt-4 pb-2 mb-6")], [
         header([class("container mx-auto px-4")], [
-          h1([class("text-2xl font-bold pb-1")], [a([href("/")], [text("go/")])]),
+          h1([class("text-2xl font-bold pb-1")], [
+            a([href("/shortlinks-admin")], [text("go/")]),
+          ]),
           text("Internal shortlinks"),
         ]),
       ]),
