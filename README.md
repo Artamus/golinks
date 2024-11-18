@@ -9,7 +9,11 @@ Inspired by:
 
 ## Development
 
+To run the project, first compile the CSS with Tailwind.
 ```sh
-gleam run   # Run the project
-gleam test  # Run the tests
+gleam run -m tailwind/run
+```
+and then run the project with arguments to your local Postgres instance:
+```sh
+PGHOST=localhost PGDATABASE=db PGUSER=postgres PGPASSWORD=test gleam run
 ```
