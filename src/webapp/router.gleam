@@ -11,6 +11,8 @@ import webapp/pages/layout
 import webapp/web.{type Context}
 import wisp.{type Request, type Response}
 
+const authenticated_email_header = "X-Auth-Request-Email"
+
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- web.middleware(req, ctx)
 
@@ -35,7 +37,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
 }
 
 fn require_email_header(req: Request, handle_request: fn(String) -> Response) {
-  case list.key_find(req.headers, "X-Auth-Request-Email") {
+  case list.key_find(req.headers, authenticated_email_header) {
     Error(_) -> wisp.response(401)
     Ok(email) -> handle_request(email)
   }
