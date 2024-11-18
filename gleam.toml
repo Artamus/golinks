@@ -24,4 +24,3 @@ args = [
     "--input=./src/webapp/css/app.css",
     "--output=./priv/static/css/app.css"
 ]
-path = "./build/bin/tailwindcss-cli"
