@@ -32,14 +32,9 @@ pub fn create(
 }
 
 pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
-  let decoder =
-    dynamic.decode2(
-      GoLink,
-      dynamic.element(0, dynamic.string),
-      dynamic.element(1, dynamic.string),
-    )
+  let decoder = golink_decoder()
   let response =
-    pog.query("select short, long from go_links where short=$1")
+    pog.query("select short, long, owner from go_links where short=$1")
     |> pog.parameter(pog.text(short))
     |> pog.returning(decoder)
     |> pog.execute(repository.conn)
@@ -57,10 +52,11 @@ pub fn get(repository: GoLinkRepository, short: String) -> Result(GoLink, Nil) {
 pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error) {
   let result =
     pog.query(
-      "insert into go_links (short, long) values ($1,$2) on conflict (short) do update set long=$2, updated_at=CURRENT_TIMESTAMP;",
+      "insert into go_links (short, long, owner) values ($1,$2,$3) on conflict (short) where owner=$3 do update set long=$2, updated_at=CURRENT_TIMESTAMP;",
     )
     |> pog.parameter(pog.text(link.short))
     |> pog.parameter(pog.text(link.long))
+    |> pog.parameter(pog.text(link.owner))
     |> pog.execute(repository.conn)
 
   case result {
@@ -72,27 +68,34 @@ pub fn save(repository: GoLinkRepository, link: GoLink) -> Result(GoLink, Error)
   }
 }
 
-pub fn delete(repository: GoLinkRepository, short: String) {
+pub fn delete(repository: GoLinkRepository, short: String, owner: String) {
   let _result =
-    pog.query("delete from go_links where short=$1")
+    pog.query("delete from go_links where short=$1 and owner=$2")
     |> pog.parameter(pog.text(short))
+    |> pog.parameter(pog.text(owner))
     |> pog.execute(repository.conn)
 }
 
-pub fn list(repository: GoLinkRepository) -> List(GoLink) {
-  let decoder =
-    dynamic.decode2(
-      GoLink,
-      dynamic.element(0, dynamic.string),
-      dynamic.element(1, dynamic.string),
-    )
+pub fn list(repository: GoLinkRepository, owner: String) -> List(GoLink) {
+  let decoder = golink_decoder()
 
   let links_rows =
-    pog.query("select short, long from go_links")
+    pog.query("select short, long, owner from go_links where owner=$1")
+    |> pog.parameter(pog.text(owner))
     |> pog.returning(decoder)
     |> pog.execute(repository.conn)
   case links_rows {
     Ok(ret) -> ret.rows
     Error(_) -> []
   }
+}
+
+fn golink_decoder() -> fn(dynamic.Dynamic) ->
+  Result(GoLink, List(dynamic.DecodeError)) {
+  dynamic.decode3(
+    GoLink,
+    dynamic.element(0, dynamic.string),
+    dynamic.element(1, dynamic.string),
+    dynamic.element(2, dynamic.string),
+  )
 }

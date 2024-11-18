@@ -3,8 +3,12 @@ CREATE TABLE IF NOT EXISTS go_links (
     short TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    long TEXT NOT NULL
+    long TEXT NOT NULL,
+    owner TEXT NOT NULL
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_golinks_short
 ON go_links(short);
+
+CREATE INDEX IF NOT EXISTS idx_golinks_owner
+ON go_links(owner);

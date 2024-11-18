@@ -19,7 +19,8 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       wisp.redirect("/shortlinks-admin")
     }
     ["shortlinks-admin"] -> {
-      let links = golink_repository.list(ctx.repository)
+      use email <- require_email_header(req)
+      let links = golink_repository.list(ctx.repository, email)
 
       home.root(links)
       |> layout.layout
@@ -33,20 +34,29 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
   }
 }
 
+fn require_email_header(req: Request, handle_request: fn(String) -> Response) {
+  case list.key_find(req.headers, "X-Auth-Request-Email") {
+    Error(_) -> wisp.response(401)
+    Ok(email) -> handle_request(email)
+  }
+}
+
 fn golink_endpoints(
   req: Request,
   short_link: String,
   golink_repository: GoLinkRepository,
 ) -> Response {
+  use email <- require_email_header(req)
   case req.method {
     Get -> get(short_link, golink_repository)
-    Delete -> delete(short_link, golink_repository)
-    Patch -> update(req, short_link, golink_repository)
+    Delete -> delete(req, short_link, golink_repository)
+    Patch -> update(req, short_link, email, golink_repository)
     _ -> wisp.method_not_allowed([Get, Delete, Patch])
   }
 }
 
 fn create(req: Request, repository: GoLinkRepository) -> Response {
+  use email <- require_email_header(req)
   use formdata <- wisp.require_form(req)
 
   let go_link = {
@@ -59,7 +69,7 @@ fn create(req: Request, repository: GoLinkRepository) -> Response {
       |> result.replace_error("Required key \"long\" is missing."),
     )
 
-    golink.create(short_link, long_link)
+    golink.create(short_link, long_link, email)
   }
 
   let save_result =
@@ -95,6 +105,7 @@ fn get(short_link: String, repository: GoLinkRepository) -> Response {
 fn update(
   req: Request,
   short_link: String,
+  email: String,
   repository: GoLinkRepository,
 ) -> Response {
   use formdata <- wisp.require_form(req)
@@ -105,7 +116,7 @@ fn update(
       |> result.replace_error("Required key \"long\" is missing."),
     )
 
-    golink.create(short_link, long_link)
+    golink.create(short_link, long_link, email)
   }
 
   let save_result =
@@ -125,8 +136,13 @@ fn update(
   }
 }
 
-fn delete(short_link: String, repository: GoLinkRepository) -> Response {
-  let _ = golink_repository.delete(repository, short_link)
+fn delete(
+  req: Request,
+  short_link: String,
+  repository: GoLinkRepository,
+) -> Response {
+  use email <- require_email_header(req)
+  let _ = golink_repository.delete(repository, short_link, email)
   wisp.redirect(to: "/shortlinks-admin")
 }
 
