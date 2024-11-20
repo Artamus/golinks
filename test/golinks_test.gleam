@@ -1,4 +1,6 @@
+import envoy
 import gleam/option.{Some}
+import gleam/result
 import gleeunit
 import gleeunit/should
 import golink.{GoLink}
@@ -16,9 +18,11 @@ pub fn main() {
 
 fn with_context(testcase: fn(web.Context) -> t) -> t {
   let assert Ok(priv_dir) = wisp.priv_directory("golinks")
+
+  let db_host = envoy.get("PGHOST") |> result.unwrap("localhost")
   let db_conn =
     pog.default_config()
-    |> pog.host("localhost")
+    |> pog.host(db_host)
     |> pog.database("golinks_test")
     |> pog.user("postgres")
     |> pog.password(Some("test"))
