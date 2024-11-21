@@ -17,7 +17,10 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_DB: golinks_test
           POSTGRES_PASSWORD: test
-        # Set health checks to wait until postgres has started
+        # Expose ports, because the gleam code runs on the host machine.
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started.
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -32,6 +35,4 @@ jobs:
           rebar3-version: "3"
       - run: gleam deps download
       - run: gleam test
-        env:
-          PGHOST: postgres
       - run: gleam format --check src test
