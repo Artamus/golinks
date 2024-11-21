@@ -1,5 +1,3 @@
-version: "3"
-
 volumes:
   pgdata:
 
@@ -24,7 +22,7 @@ services:
     ports:
       - 3000:3000
     environment:
-      - PGPASSWORD=localpasswd
+      PGPASSWORD: localpasswd
     depends_on:
       postgres:
         condition: service_healthy
