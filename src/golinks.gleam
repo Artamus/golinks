@@ -1,6 +1,6 @@
 import envoy
 import gleam/erlang/process
-import gleam/option.{Some}
+import gleam/option
 import gleam/result
 import golink_repository
 import mist
@@ -16,16 +16,16 @@ pub fn main() {
 
   let assert Ok(priv_dir) = wisp.priv_directory("golinks")
 
-  let pg_host = envoy.get("PGHOST") |> result.unwrap("postgres")
-  let pg_db = envoy.get("PGDATABASE") |> result.unwrap("postgres")
+  let pg_host = envoy.get("PGHOST") |> result.unwrap("localhost")
+  let pg_db = envoy.get("PGDATABASE") |> result.unwrap("golinks")
   let pg_user = envoy.get("PGUSER") |> result.unwrap("postgres")
-  let assert Ok(pg_pswd) = envoy.get("PGPASSWORD")
+  let pg_pswd = envoy.get("PGPASSWORD") |> option.from_result()
   let db_conn =
     pog.default_config()
     |> pog.host(pg_host)
     |> pog.database(pg_db)
     |> pog.user(pg_user)
-    |> pog.password(Some(pg_pswd))
+    |> pog.password(pg_pswd)
     |> pog.pool_size(15)
     |> pog.connect
   let assert Ok(schema) = simplifile.read(from: priv_dir <> "/db/schema.sql")

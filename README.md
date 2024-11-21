@@ -15,5 +15,10 @@ gleam run -m tailwind/run
 ```
 and then run the project with arguments to your local Postgres instance:
 ```sh
-PGHOST=localhost PGDATABASE=db PGUSER=postgres PGPASSWORD=test gleam run
+PGHOST=localhost PGDATABASE=golinks PGUSER=postgres PGPASSWORD=test gleam run
+```
+
+or if you already have a database named `golinks` running on `localhost` and a user with the username `postgres` and without a password, you can simply use
+```sh
+gleam run
 ```
