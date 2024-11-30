@@ -5,6 +5,7 @@ import golink.{GoLink}
 import golink_repository
 import pog
 import simplifile
+import webapp/authentication_config
 import webapp/router
 import webapp/web
 import wisp
@@ -16,6 +17,9 @@ pub fn main() {
 
 fn with_context(testcase: fn(web.Context) -> t) -> t {
   let assert Ok(priv_dir) = wisp.priv_directory("golinks")
+
+  let auth_config =
+    authentication_config.HeaderAuthentication("X-Auth-Request-Email")
 
   let db_conn =
     pog.default_config()
@@ -31,7 +35,7 @@ fn with_context(testcase: fn(web.Context) -> t) -> t {
 
   let assert Ok(schema) = simplifile.read(from: priv_dir <> "/db/schema.sql")
   let assert Ok(repository) = golink_repository.create(db_conn, schema)
-  let ctx = web.Context(priv_dir <> "/static", repository)
+  let ctx = web.Context(priv_dir <> "/static", repository, auth_config)
 
   testcase(ctx)
 }

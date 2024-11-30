@@ -1,10 +1,12 @@
 import golink_repository
+import webapp/authentication_config.{type AuthenticationConfig}
 import wisp
 
 pub type Context {
   Context(
     static_directory: String,
     repository: golink_repository.GoLinkRepository,
+    authentication_config: AuthenticationConfig,
   )
 }
 

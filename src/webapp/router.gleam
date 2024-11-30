@@ -5,13 +5,16 @@ import gleam/string
 import golink
 import golink_repository.{type GoLinkRepository}
 import lustre/element
+import webapp/authentication_config.{
+  type AuthenticationConfig, HeaderAuthentication, NoAuthentication,
+}
 import webapp/pages/golink as golink_page
 import webapp/pages/home
 import webapp/pages/layout
 import webapp/web.{type Context}
 import wisp.{type Request, type Response}
 
-const authenticated_email_header = "X-Auth-Request-Email"
+const no_authentication_email = "fake@example.com"
 
 pub fn handle_request(req: Request, ctx: Context) -> Response {
   use req <- web.middleware(req, ctx)
@@ -21,7 +24,7 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       wisp.redirect("/shortlinks-admin")
     }
     ["shortlinks-admin"] -> {
-      use email <- require_email_header(req)
+      use email <- require_auth(req, ctx.authentication_config)
       let links = golink_repository.list(ctx.repository, email)
 
       home.root(links)
@@ -29,36 +32,49 @@ pub fn handle_request(req: Request, ctx: Context) -> Response {
       |> element.to_document_string_builder
       |> wisp.html_response(200)
     }
-    ["shortlinks-admin", "golink"] -> create(req, ctx.repository)
-    ["shortlinks-admin", "golink", short_link] ->
-      golink_endpoints(req, short_link, ctx.repository)
+    ["shortlinks-admin", "golink"] -> {
+      use email <- require_auth(req, ctx.authentication_config)
+      create(req, email, ctx.repository)
+    }
+    ["shortlinks-admin", "golink", short_link] -> {
+      use email <- require_auth(req, ctx.authentication_config)
+      golink_endpoints(req, short_link, email, ctx.repository)
+    }
     [short_link, ..tail] -> resolve(short_link, tail, ctx.repository)
   }
 }
 
-fn require_email_header(req: Request, handle_request: fn(String) -> Response) {
-  case list.key_find(req.headers, authenticated_email_header) {
-    Error(_) -> wisp.response(401)
-    Ok(email) -> handle_request(email)
+fn require_auth(
+  req: Request,
+  authentication_config: AuthenticationConfig,
+  handle_request: fn(String) -> Response,
+) {
+  case authentication_config {
+    HeaderAuthentication(header_name) -> {
+      case list.key_find(req.headers, header_name) {
+        Error(_) -> wisp.response(401)
+        Ok(email) -> handle_request(email)
+      }
+    }
+    NoAuthentication -> handle_request(no_authentication_email)
   }
 }
 
 fn golink_endpoints(
   req: Request,
   short_link: String,
+  email: String,
   golink_repository: GoLinkRepository,
 ) -> Response {
-  use email <- require_email_header(req)
   case req.method {
     Get -> get(short_link, golink_repository)
-    Delete -> delete(req, short_link, golink_repository)
+    Delete -> delete(short_link, email, golink_repository)
     Patch -> update(req, short_link, email, golink_repository)
     _ -> wisp.method_not_allowed([Get, Delete, Patch])
   }
 }
 
-fn create(req: Request, repository: GoLinkRepository) -> Response {
-  use email <- require_email_header(req)
+fn create(req: Request, email: String, repository: GoLinkRepository) -> Response {
   use formdata <- wisp.require_form(req)
 
   let go_link = {
@@ -139,11 +155,10 @@ fn update(
 }
 
 fn delete(
-  req: Request,
   short_link: String,
+  email: String,
   repository: GoLinkRepository,
 ) -> Response {
-  use email <- require_email_header(req)
   let _ = golink_repository.delete(repository, short_link, email)
   wisp.redirect(to: "/shortlinks-admin")
 }
