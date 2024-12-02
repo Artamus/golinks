@@ -5,6 +5,8 @@ COPY . /build/
 
 # Compile the project
 RUN cd /build \
+  && gleam run -m tailwind/install \ 
+  && gleam run -m tailwind/run \
   && gleam export erlang-shipment \
   && mv build/erlang-shipment /app \
   && rm -r /build
